@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Sistema de Ventas con Historial</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #1a73e8; }
+        .contenedor-principal { display: flex; gap: 20px; max-width: 1100px; margin: 0 auto; flex-wrap: wrap; }
+        .seccion { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+        .producto { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .btn-agregar { background-color: #1a73e8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-agregar:hover { background-color: #1557b0; }
+        .btn-pagar { background-color: #28a745; color: white; border: none; width: 100%; padding: 12px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        .btn-pagar:hover { background-color: #218838; }
+        .btn-borrar { background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        ul { list-style: none; padding: 0; }
+        li { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 15px; border-top: 2px solid #333; padding-top: 10px; }
+        .historial-item { background: #e9ecef; padding: 8px; margin-bottom: 5px; border-radius: 4px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <h1>🛒 Sistema de Ventas Profesional</h1>
+
+    <div class="contenedor-principal">
+        
+        <div class="seccion">
+            <h2>Productos Disponibles</h2>
+            <div class="producto">
+                <span>🛠️ Carretilla ($60)</span>
+                <button class="btn-agregar" onclick="agregarAlCarrito('Carretilla', 60)">Agregar</button>
+            </div>
+            
+            <div class="producto">
+                <span>🔌 Extensión Eléctrica ($15)</span>
+                <button class="btn-agregar" onclick="agregarAlCarrito('Extensión Eléctrica', 15)">Agregar</button>
+            </div>
+            
+            <div class="producto">
+                <span>🔨 Martillo Profesional ($25)</span>
+                <button class="btn-agregar" onclick="agregarAlCarrito('Martillo Profesional', 25)">Agregar</button>
+            </div>
+        </div>
+
+        <div class="seccion">
+            <h2>Carrito Actual</h2>
+            <ul id="lista-carrito"></ul>
+            <div class="total">Total Actual: $<span id="monto-total">0</span></div>
+            <button class="btn-pagar" onclick="procesarPago()">Cobrar Venta</button>
+        </div>
+
+        <div class="seccion" style="flex: 100%;">
+            <h2>📊 Historial de Ventas del Día</h2>
+            <div id="lista-historial"></div>
+            <div class="total" style="color: #28a745;">Caja Total Acumulada: $<span id="caja-total">0</span></div>
+            <button class="btn-borrar" onclick="limpiarHistorial()">Cerrar Caja (Borrar Historial)</button>
+        </div>
+
+    </div>
+
+    <script>
+        let carrito = [];
+        let total = 0;
+        
+        // Al cargar la página, recuperamos el historial guardado de la memoria de la computadora
+        let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
+
+        // Dibujamos el historial inmediatamente al abrir la app
+        actualizarHistorialPantalla();
+
+        function agregarAlCarrito(nombre, precio) {
+            carrito.push({ nombre: nombre, precio: precio });
+            total = total + precio;
+            actualizarPantalla();
+        }
+
+        function actualizarPantalla() {
+            let listaHTML = document.getElementById("lista-carrito");
+            let totalHTML = document.getElementById("monto-total");
+
+            listaHTML.innerHTML = "";
+            carrito.forEach(function(producto) {
+                let elementoLi = document.createElement("li");
+                elementoLi.innerHTML = `<span>${producto.nombre}</span> <span>$${producto.precio}</span>`;
+                listaHTML.appendChild(elementoLi);
+            });
+
+            totalHTML.innerText = total;
+        }
+
+        function procesarPago() {
+            if (carrito.length === 0) {
+                alert("El carrito está vacío.");
+                return;
+            }
+
+            // Creamos un registro con la fecha, hora y productos vendidos
+            let ahora = new Date();
+            let horaFormateada = ahora.getHours() + ":" + (ahora.getMinutes()<10?'0':'') + ahora.getMinutes();
+            
+            let nuevaVenta = {
+                hora: horaFormateada,
+                productos: carrito.map(p => p.nombre).join(", "),
+                monto: total
+            };
+
+            // Agregamos la nueva venta al historial en memoria
+            historialVentas.push(nuevaVenta);
+
+            // ¡AQUÍ ESTÁ LA MAGIA! Guardamos el historial en el disco duro del navegador
+            localStorage.setItem("historial", JSON.stringify(historialVentas));
+
+            alert("💰 ¡Venta guardada con éxito!");
+
+            // Reiniciamos carrito
+            carrito = [];
+            total = 0;
+            actualizarPantalla();
+            
+            // Actualizamos la tabla de historial
+            actualizarHistorialPantalla();
+        }
+
+        function actualizarHistorialPantalla() {
+            let historialHTML = document.getElementById("lista-historial");
+            let cajaTotalHTML = document.getElementById("caja-total");
+            
+            historialHTML.innerHTML = "";
+            let sumaCaja = 0;
+
+            historialVentas.forEach(function(venta) {
+                let div = document.createElement("div");
+                div.className = "historial-item";
+                div.innerHTML = `⏰ <b>${venta.hora}</b> - Productos: [${venta.productos}] | <b>Total: $${venta.monto}</b>`;
+                historialHTML.appendChild(div);
+                sumaCaja = sumaCaja + venta.monto;
+            });
+
+            cajaTotalHTML.innerText = sumaCaja;
+        }
+
+        function limpiarHistorial() {
+            if(confirm("¿Seguro que deseas cerrar la caja? Se borrarán todos los registros de la pantalla.")) {
+                localStorage.removeItem("historial");
+                historialVentas = [];
+                actualizarHistorialPantalla();
+            }
+        }
+    </script>
+
+</body>
+</html>
