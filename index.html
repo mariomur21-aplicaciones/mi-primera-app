@@ -205,12 +205,15 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 div.style.padding = "10px";
                 div.style.borderBottom = "1px solid #eee";
                 
+                let refFormateada = producto.codigo.toString().padStart(5, '0');
+                let precioFormateado = producto.precio.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                
                 div.innerHTML = `
-                    <div><b>Marca:</b> ${producto.marca}</div>
-                    <div><b>Código:</b> ${producto.codigo}</div>
+                    <div><b>MARCA:</b> ${producto.marca}</div>
+                    <div><b>REF:</b> ${refFormateada}</div>
                     <div><b>Detalle:</b> ${producto.detalle}</div>
-                    <div><b>Stock:</b> ${producto.stock} unidades</div>
-                    <div><b>Precio:</b> $ ${producto.precio.toLocaleString('es-CO')} COP</div>
+                    <div><b>STOCK:</b> ${producto.stock}</div>
+                    <div><b>PRECIO:</b> ${precioFormateado}</div>
                     <button class="btn-agregar" style="width: 100%; margin-top: 8px;" onclick="agregarAlCarritoDinamico(${indice})">Agregar al Carrito</button>
                 `;
                
