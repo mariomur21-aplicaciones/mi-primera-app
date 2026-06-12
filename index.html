@@ -157,7 +157,7 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             mostrarProductosDinamicos();
         }
 
-        function procesarCSV(texto) {
+  function procesarCSV(texto) {
             let lineas = texto.split(/\r?\n/);
             productosInventario = [];
             
@@ -166,16 +166,23 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 if (linea === "") continue;
                 
                 let columnas = linea.split(";");
-                if (columnas.length < 4) {
+                if (columnas.length < 5) {
                     columnas = linea.split(",");
                 }
                 
-                if (columnas.length >= 4) {
+                if (columnas.length >= 5) {
+                    let marcaVal = columnas[0] ? columnas[0].trim() : "Sin Marca";
+                    let codigoVal = columnas[1] ? columnas[1].trim() : "Sin Código";
+                    let detalleVal = columnas[2] ? columnas[2].trim() : "Sin Detalle";
+                    let stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
+                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/,/g, "") : "0";
+                    
                     productosInventario.push({
-                        codigo: columnas[0].trim(),
-                        detalle: columnas[1].trim(),
-                        stock: parseInt(columnas[2].trim()) || 0,
-                        precio: parseFloat(columnas[3].trim()) || 0
+                        marca: marcaVal,
+                        codigo: codigoVal,
+                        detalle: detalleVal,
+                        stock: isNaN(stockVal) ? 0 : stockVal,
+                        precio: parseFloat(precioRaw) || 0
                     });
                 }
             }
@@ -199,12 +206,14 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 div.style.borderBottom = "1px solid #eee";
                 
                 div.innerHTML = `
+                    <div><b>Marca:</b> ${producto.marca}</div>
                     <div><b>Código:</b> ${producto.codigo}</div>
                     <div><b>Detalle:</b> ${producto.detalle}</div>
                     <div><b>Stock:</b> ${producto.stock} unidades</div>
                     <div><b>Precio:</b> $ ${producto.precio.toLocaleString('es-CO')} COP</div>
                     <button class="btn-agregar" style="width: 100%; margin-top: 8px;" onclick="agregarAlCarritoDinamico(${indice})">Agregar al Carrito</button>
                 `;
+               
                 contenedor.appendChild(div);
             });
         }
