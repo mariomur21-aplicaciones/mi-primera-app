@@ -27,21 +27,12 @@
 
     <div class="contenedor-principal">
         
-        <div class="seccion">
+       <div class="seccion">
+            <h2>Cargar Inventario</h2>
+            <input type="file" id="archivo-csv" accept=".csv" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
             <h2>Productos Disponibles</h2>
-            <div class="producto">
-                <span>🛠️ Carretilla ($60)</span>
-                <button class="btn-agregar" onclick="agregarAlCarrito('Carretilla', 60)">Agregar</button>
-            </div>
-            
-            <div class="producto">
-                <span>🔌 Extensión Eléctrica ($15)</span>
-                <button class="btn-agregar" onclick="agregarAlCarrito('Extensión Eléctrica', 15)">Agregar</button>
-            </div>
-            
-            <div class="producto">
-                <span>🔨 Martillo Profesional ($25)</span>
-                <button class="btn-agregar" onclick="agregarAlCarrito('Martillo Profesional', 25)">Agregar</button>
+            <div id="lista-productos-dinamica">
+                <p>Por favor, cargue un archivo CSV para desplegar la lista de productos comerciales.</p>
             </div>
         </div>
 
@@ -66,17 +57,128 @@
         let total = 0;
         
         // Al cargar la página, recuperamos el historial guardado de la memoria de la computadora
-        let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
+      
+let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
 
         // Dibujamos el historial inmediatamente al abrir la app
         actualizarHistorialPantalla();
 
-        function agregarAlCarrito(nombre, precio) {
-            carrito.push({ nombre: nombre, precio: precio });
-            total = total + precio;
-            actualizarPantalla();
+       let productosInventario = [];
+
+        document.getElementById("archivo-inventario").addEventListener("change", function(e) {
+            let archivo = e.target.files[0];
+            if (!archivo) return;
+
+            let nombreArchivo = archivo.name.toLowerCase();
+            let lector = new FileReader();
+
+            if (nombreArchivo.endsWith(".xlsx") || nombreArchivo.endsWith(".xls")) {
+                lector.onload = function(evt) {
+                    let datos = new Uint8Array(evt.target.result);
+                    let libro = XLSX.read(datos, { type: 'array' });
+                    let primeraHoja = libro.SheetNames[0];
+                    let hojaDatos = libro.Sheets[primeraHoja];
+                    let filas = XLSX.utils.sheet_to_json(hojaDatos, { header: 1 });
+                    procesarExcel(filas);
+                };
+                lector.readAsArrayBuffer(archivo);
+            } else if (nombreArchivo.endsWith(".csv")) {
+                lector.onload = function(evt) {
+                    let contenido = evt.target.result;
+                    procesarCSV(contenido);
+                };
+                lector.readAsText(archivo, "UTF-8");
+            } else {
+                alert("Formato de archivo no admitido. Cargue un archivo Excel (.xlsx) o CSV.");
+            }
+        });
+
+        function procesarExcel(filas) {
+            productosInventario = [];
+            // Empezamos en la fila 1 para ignorar la fila de encabezados
+            for (let i = 1; i < filas.length; i++) {
+                let fila = filas[i];
+                if (!fila || fila.length === 0) continue;
+                
+                if (fila[0] !== undefined || fila[1] !== undefined) {
+                    productosInventario.push({
+                        codigo: fila[0] ? fila[0].toString().trim() : "Sin Código",
+                        detalle: fila[1] ? fila[1].toString().trim() : "Sin Detalle",
+                        stock: parseInt(fila[2]) || 0,
+                        precio: parseFloat(fila[3]) || 0
+                    });
+                }
+            }
+            mostrarProductosDinamicos();
         }
 
+        function procesarCSV(texto) {
+            let lineas = texto.split(/\r?\n/);
+            productosInventario = [];
+            
+            for (let i = 1; i < lineas.length; i++) {
+                let linea = lineas[i].trim();
+                if (linea === "") continue;
+                
+                let columnas = linea.split(";");
+                if (columnas.length < 4) {
+                    columnas = linea.split(",");
+                }
+                
+                if (columnas.length >= 4) {
+                    productosInventario.push({
+                        codigo: columnas[0].trim(),
+                        detalle: columnas[1].trim(),
+                        stock: parseInt(columnas[2].trim()) || 0,
+                        precio: parseFloat(columnas[3].trim()) || 0
+                    });
+                }
+            }
+            mostrarProductosDinamicos();
+        }
+
+        function mostrarProductosDinamicos() {
+            let contenedor = document.getElementById("lista-productos-dinamica");
+            contenedor.innerHTML = "";
+            
+            if (productosInventario.length === 0) {
+                contenedor.innerHTML = "<p>No se encontraron productos en el archivo.</p>";
+                return;
+            }
+            
+            productosInventario.forEach(function(producto, indice) {
+                let div = document.createElement("div");
+                div.className = "producto";
+                div.style.display = "block";
+                div.style.padding = "10px";
+                div.style.borderBottom = "1px solid #eee";
+                
+                div.innerHTML = `
+                    <div><b>Código:</b> ${producto.codigo}</div>
+                    <div><b>Detalle:</b> ${producto.detalle}</div>
+                    <div><b>Stock:</b> ${producto.stock} unidades</div>
+                    <div><b>Precio:</b> $ ${producto.precio.toLocaleString('es-CO')} COP</div>
+                    <button class="btn-agregar" style="width: 100%; margin-top: 8px;" onclick="agregarAlCarritoDinamico(${indice})">Agregar al Carrito</button>
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function agregarAlCarritoDinamico(indice) {
+            let producto = productosInventario[indice];
+            
+            if (producto.stock <= 0) {
+                alert("Este producto no cuenta con unidades disponibles en el stock.");
+                return;
+            }
+            
+            producto.stock--;
+            carrito.push({ nombre: producto.detalle, precio: producto.precio });
+            total = total + producto.precio;
+            
+            mostrarProductosDinamicos();
+            actualizarPantalla();
+        }
         function actualizarPantalla() {
             let listaHTML = document.getElementById("lista-carrito");
             let totalHTML = document.getElementById("monto-total");
