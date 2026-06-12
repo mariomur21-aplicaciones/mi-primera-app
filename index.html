@@ -63,50 +63,93 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
         // Dibujamos el historial inmediatamente al abrir la app
         actualizarHistorialPantalla();
 
-       let productosInventario = [];
+      let productosInventario = [];
 
-        document.getElementById("archivo-inventario").addEventListener("change", function(e) {
-            let archivo = e.target.files[0];
-            if (!archivo) return;
+        // Tolera selectores de la version 1.1 y 1.2 para evitar fallos de interfaz
+        let botonCarga = document.getElementById("archivo-inventario") || document.getElementById("archivo-csv");
+        
+        if (botonCarga) {
+            botonCarga.addEventListener("change", function(e) {
+                let archivo = e.target.files[0];
+                if (!archivo) return;
 
-            let nombreArchivo = archivo.name.toLowerCase();
-            let lector = new FileReader();
+                let nombreArchivo = archivo.name.toLowerCase();
+                let lector = new FileReader();
 
-            if (nombreArchivo.endsWith(".xlsx") || nombreArchivo.endsWith(".xls")) {
-                lector.onload = function(evt) {
-                    let datos = new Uint8Array(evt.target.result);
-                    let libro = XLSX.read(datos, { type: 'array' });
-                    let primeraHoja = libro.SheetNames[0];
-                    let hojaDatos = libro.Sheets[primeraHoja];
-                    let filas = XLSX.utils.sheet_to_json(hojaDatos, { header: 1 });
-                    procesarExcel(filas);
-                };
-                lector.readAsArrayBuffer(archivo);
-            } else if (nombreArchivo.endsWith(".csv")) {
-                lector.onload = function(evt) {
-                    let contenido = evt.target.result;
-                    procesarCSV(contenido);
-                };
-                lector.readAsText(archivo, "UTF-8");
-            } else {
-                alert("Formato de archivo no admitido. Cargue un archivo Excel (.xlsx) o CSV.");
-            }
-        });
+                if (nombreArchivo.endsWith(".xlsx") || nombreArchivo.endsWith(".xls")) {
+                    lector.onload = function(evt) {
+                        let datos = new Uint8Array(evt.target.result);
+                        let libro = XLSX.read(datos, { type: 'array' });
+                        let primeraHoja = libro.SheetNames[0];
+                        let hojaDatos = libro.Sheets[primeraHoja];
+                        let filas = XLSX.utils.sheet_to_json(hojaDatos, { header: 1 });
+                        procesarExcel(filas);
+                    };
+                    lector.readAsArrayBuffer(archivo);
+                } else if (nombreArchivo.endsWith(".csv")) {
+                    lector.onload = function(evt) {
+                        let contenido = evt.target.result;
+                        procesarCSV(contenido);
+                    };
+                    lector.readAsText(archivo, "UTF-8");
+                } else {
+                    alert("Formato de archivo no admitido. Cargue un archivo Excel (.xlsx) o CSV.");
+                }
+            });
+        }
 
         function procesarExcel(filas) {
             productosInventario = [];
-            // Empezamos en la fila 1 para ignorar la fila de encabezados
             for (let i = 1; i < filas.length; i++) {
                 let fila = filas[i];
-                if (!fila || fila.length === 0) continue;
+                if (!fila || fila.length < 3) continue;
                 
-                if (fila[0] !== undefined || fila[1] !== undefined) {
+                // Mapeo correspondiente a las columnas reales del documento comercial
+                let codigoVal = fila[1] ? fila[1].toString().trim() : "";
+                let detalleVal = fila[2] ? fila[2].toString().trim() : "";
+                let stockVal = fila[4] !== undefined ? parseInt(fila[4]) : 0;
+                let precioRaw = fila[5] !== undefined ? fila[5].toString().trim().replace(/,/g, "") : "0";
+                
+                if (codigoVal !== "" || detalleVal !== "") {
                     productosInventario.push({
-                        codigo: fila[0] ? fila[0].toString().trim() : "Sin Código",
-                        detalle: fila[1] ? fila[1].toString().trim() : "Sin Detalle",
-                        stock: parseInt(fila[2]) || 0,
-                        precio: parseFloat(fila[3]) || 0
+                        codigo: codigoVal || "Sin Código",
+                        detalle: detalleVal || "Sin Detalle",
+                        stock: isNaN(stockVal) ? 0 : stockVal,
+                        precio: parseFloat(precioRaw) || 0
                     });
+                }
+            }
+            mostrarProductosDinamicos();
+        }
+
+        function procesarCSV(texto) {
+            let lineas = texto.split(/\r?\n/);
+            productosInventario = [];
+            
+            for (let i = 1; i < lineas.length; i++) {
+                let linea = lineas[i].trim();
+                if (linea === "") continue;
+                
+                let columnas = linea.split(";");
+                if (columnas.length < 4) {
+                    columnas = linea.split(",");
+                }
+                
+                if (columnas.length >= 3) {
+                    // Extrae datos omitiendo MARCA y Columna1, capturando REF, Detalle, STOCK y PRECIO
+                    let codigoVal = columnas[1] ? columnas[1].trim() : "";
+                    let detalleVal = columnas[2] ? columnas[2].trim() : "";
+                    let stockVal = columnas[4] ? parseInt(columnas[4].trim()) : 0;
+                    let precioRaw = columnas[5] ? columnas[5].trim().replace(/,/g, "") : "0";
+                    
+                    if (codigoVal !== "" || detalleVal !== "") {
+                        productosInventario.push({
+                            codigo: codigoVal || "Sin Código",
+                            detalle: detalleVal || "Sin Detalle",
+                            stock: isNaN(stockVal) ? 0 : stockVal,
+                            precio: parseFloat(precioRaw) || 0
+                        });
+                    }
                 }
             }
             mostrarProductosDinamicos();
