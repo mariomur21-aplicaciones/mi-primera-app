@@ -98,17 +98,19 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             });
         }
 
-        function procesarExcel(filas) {
+        
+
+      function procesarExcel(filas) {
             productosInventario = [];
             for (let i = 1; i < filas.length; i++) {
                 let fila = filas[i];
                 if (!fila || fila.length < 3) continue;
                 
-                // Mapeo correspondiente a las columnas reales del documento comercial
+                // Mapeo corregido para el archivo de 5 columnas (REF, Detalle, STOCK, PRECIO)
                 let codigoVal = fila[1] ? fila[1].toString().trim() : "";
                 let detalleVal = fila[2] ? fila[2].toString().trim() : "";
-                let stockVal = fila[4] !== undefined ? parseInt(fila[4]) : 0;
-                let precioRaw = fila[5] !== undefined ? fila[5].toString().trim().replace(/,/g, "") : "0";
+                let stockVal = fila[3] !== undefined ? parseInt(fila[3]) : 0;
+                let precioRaw = fila[4] !== undefined ? fila[4].toString().trim().replace(/,/g, "") : "0";
                 
                 if (codigoVal !== "" || detalleVal !== "") {
                     productosInventario.push({
@@ -131,16 +133,16 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 if (linea === "") continue;
                 
                 let columnas = linea.split(";");
-                if (columnas.length < 4) {
+                if (columnas.length < 3) {
                     columnas = linea.split(",");
                 }
                 
                 if (columnas.length >= 3) {
-                    // Extrae datos omitiendo MARCA y Columna1, capturando REF, Detalle, STOCK y PRECIO
+                    // Mapeo corregido para extraer REF, Detalle, STOCK y PRECIO del CSV de 5 columnas
                     let codigoVal = columnas[1] ? columnas[1].trim() : "";
                     let detalleVal = columnas[2] ? columnas[2].trim() : "";
-                    let stockVal = columnas[4] ? parseInt(columnas[4].trim()) : 0;
-                    let precioRaw = columnas[5] ? columnas[5].trim().replace(/,/g, "") : "0";
+                    let stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
+                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/,/g, "") : "0";
                     
                     if (codigoVal !== "" || detalleVal !== "") {
                         productosInventario.push({
