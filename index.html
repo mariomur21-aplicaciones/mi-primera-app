@@ -339,14 +339,14 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             totalHTML.innerText = total.toLocaleString('en-US');
         }
 
-        function procesarPago() {
+       function procesarPago() {
             if (carrito.length === 0) {
                 alert("El carrito está vacío.");
                 return;
             }
 
             let ahora = new Date();
-            let horaFormateada = ...;
+            let horaFormateada = ahora.getHours() + ":" + (ahora.getMinutes() < 10 ? '0' : '') + ahora.getMinutes();
             let nuevaVenta = {
                 hora: horaFormateada,
                 productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
@@ -355,7 +355,7 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             
             historialVentas.push(nuevaVenta);
             localStorage.setItem("historial", JSON.stringify(historialVentas));
-            alert("💰 ¡Venta guardada con éxito!");
+            alert("Venta guardada con éxito");
 
             carrito = [];
             total = 0;
