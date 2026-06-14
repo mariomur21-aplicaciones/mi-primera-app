@@ -20,6 +20,7 @@
         .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 15px; border-top: 2px solid #333; padding-top: 10px; }
         .historial-item { background: #e9ecef; padding: 8px; margin-bottom: 5px; border-radius: 4px; font-size: 13px; }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -127,37 +128,27 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             mostrarProductosDinamicos();
         }
 
-        function procesarCSV(texto) {
-            let lineas = texto.split(/\r?\n/);
-            productosInventario = [];
+       function actualizarHistorialPantalla() {
+            let historialHTML = document.getElementById("lista-historial");
+            let cajaTotalHTML = document.getElementById("caja-total");
             
-            for (let i = 1; i < lineas.length; i++) {
-                let linea = lineas[i].trim();
-                if (linea === "") continue;
-                
-                let columnas = linea.split(";");
-                if (columnas.length < 3) {
-                    columnas = linea.split(",");
-                }
-                
-                if (columnas.length >= 3) {
-                    // Mapeo corregido para extraer REF, Detalle, STOCK y PRECIO del CSV de 5 columnas
-                    let codigoVal = columnas[1] ? columnas[1].trim() : "";
-                    let detalleVal = columnas[2] ? columnas[2].trim() : "";
-                    let stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
-                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/,/g, "") : "0";
-                    
-                    if (codigoVal !== "" || detalleVal !== "") {
-                        productosInventario.push({
-                            codigo: codigoVal || "Sin Código",
-                            detalle: detalleVal || "Sin Detalle",
-                            stock: isNaN(stockVal) ? 0 : stockVal,
-                            precio: parseFloat(precioRaw) || 0
-                        });
-                    }
-                }
-            }
-            mostrarProductosDinamicos();
+            historialHTML.innerHTML = "";
+            let sumaCaja = 0;
+            historialVentas.forEach(function(venta) {
+                let div = document.createElement("div");
+                div.className = "historial-item";
+                // Convertimos el monto de cada venta individual a formato con separadores de miles
+                let montoFormateado = venta.monto.toLocaleString('en-US');
+                div.innerHTML = `⏰ <b>${venta.hora}</b> - Productos: [${venta.productos}] | <b>Total: $${montoFormateado}</b>`;
+                historialHTML.appendChild(div);
+                sumaCaja = sumaCaja + venta.monto;
+            });
+
+            // Convertimos el total acumulado de la caja a formato con separadores de miles
+            cajaTotalHTML.innerText = sumaCaja.toLocaleString('en-US');
+        }
+
+            cajaTotalHTML.innerText = sumaCaja;
         }
 
   function procesarCSV(texto) {
