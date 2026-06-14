@@ -23,18 +23,13 @@
 </head>
 <body>
 
-    <h1>🛒 Sistema de Ventas Profesional</h1>
-
-    <div class="seccion">
+    <div class="contenedor-principal">
+        
+       <div class="seccion">
             <h2>Cargar Inventario</h2>
             <input type="file" id="archivo-csv" accept=".csv" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
             <h2>Buscar Producto</h2>
             <input type="text" id="buscador-producto" placeholder="Escriba la marca, ref o detalle..." oninput="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;" disabled>
-            <h2>Productos Disponibles</h2>
-            
-            <div id="lista-productos-dinamica">
-                <p>Por favor, cargue un archivo CSV para desplegar la lista de productos comerciales.</p>
-            </div>
         </div>
 
         <div class="seccion">
@@ -42,6 +37,13 @@
             <ul id="lista-carrito"></ul>
             <div class="total">Total Actual: $<span id="monto-total">0</span></div>
             <button class="btn-pagar" onclick="procesarPago()">Cobrar Venta</button>
+        </div>
+
+        <div class="seccion" style="flex: 100%;">
+            <h2>Productos Disponibles</h2>
+            <div id="lista-productos-dinamica">
+                <p>Por favor, cargue un archivo CSV para desplegar la lista de productos comerciales.</p>
+            </div>
         </div>
 
         <div class="seccion" style="flex: 100%;">
@@ -256,31 +258,85 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
 
         function agregarAlCarritoDinamico(indice) {
             let producto = productosInventario[indice];
-            
             if (producto.stock <= 0) {
                 alert("Este producto no cuenta con unidades disponibles en el stock.");
                 return;
             }
             
             producto.stock--;
-            carrito.push({ nombre: producto.detalle, precio: producto.precio });
-            total = total + producto.precio;
             
+            let encontrado = carrito.find(item => item.indiceOriginal === indice);
+            if (encontrado) {
+                encontrado.cantidad++;
+            } else {
+                carrito.push({
+                    nombre: producto.detalle,
+                    precio: producto.precio,
+                    cantidad: 1,
+                    indiceOriginal: indice
+                });
+            }
+            
+            recalcularTotal();
             mostrarProductosDinamicos();
             actualizarPantalla();
         }
+
+        function actualizarCantidadCarrito(index, nuevaCantidad) {
+            nuevaCantidad = parseInt(nuevaCantidad);
+            if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+                alert("La cantidad debe ser mayor o igual a 1.");
+                actualizarPantalla();
+                return;
+            }
+            
+            let item = carrito[index];
+            let producto = productosInventario[item.indiceOriginal];
+            let diferencia = nuevaCantidad - item.cantidad;
+            
+            if (producto.stock < diferencia) {
+                alert("No hay suficiente stock disponible para aumentar a esa cantidad.");
+                actualizarPantalla();
+                return;
+            }
+            
+            producto.stock -= diferencia;
+            item.cantidad = nuevaCantidad;
+            
+            recalcularTotal();
+            mostrarProductosDinamicos();
+            actualizarPantalla();
+        }
+
+        function recalcularTotal() {
+            total = 0;
+            carrito.forEach(function(item) {
+                total += item.precio * item.cantidad;
+            });
+        }
+
         function actualizarPantalla() {
             let listaHTML = document.getElementById("lista-carrito");
             let totalHTML = document.getElementById("monto-total");
 
             listaHTML.innerHTML = "";
-            carrito.forEach(function(producto) {
+            carrito.forEach(function(item, index) {
                 let elementoLi = document.createElement("li");
-                elementoLi.innerHTML = `<span>${producto.nombre}</span> <span>$${producto.precio}</span>`;
+                elementoLi.style.display = "flex";
+                elementoLi.style.justifyContent = "space-between";
+                elementoLi.style.alignItems = "center";
+                elementoLi.style.marginBottom = "8px";
+                
+                let precioSubtotal = item.precio * item.cantidad;
+                
+                elementoLi.innerHTML = `
+                    <span style="flex: 1; font-size: 14px;">${item.nombre}</span>
+                    <input type="number" value="${item.cantidad}" min="1" onchange="actualizarCantidadCarrito(${index}, this.value)" style="width: 55px; margin: 0 10px; padding: 4px; text-align: center; box-sizing: border-box;">
+                    <span style="font-weight: bold;">$${precioSubtotal.toLocaleString('en-US')}</span>
+                `;
                 listaHTML.appendChild(elementoLi);
             });
-
-            totalHTML.innerText = total;
+            totalHTML.innerText = total.toLocaleString('en-US');
         }
 
         function procesarPago() {
@@ -289,30 +345,21 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 return;
             }
 
-            // Creamos un registro con la fecha, hora y productos vendidos
             let ahora = new Date();
-            let horaFormateada = ahora.getHours() + ":" + (ahora.getMinutes()<10?'0':'') + ahora.getMinutes();
-            
+            let horaFormateada = ...;
             let nuevaVenta = {
                 hora: horaFormateada,
-                productos: carrito.map(p => p.nombre).join(", "),
+                productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
                 monto: total
             };
-
-            // Agregamos la nueva venta al historial en memoria
+            
             historialVentas.push(nuevaVenta);
-
-            // ¡AQUÍ ESTÁ LA MAGIA! Guardamos el historial en el disco duro del navegador
             localStorage.setItem("historial", JSON.stringify(historialVentas));
-
             alert("💰 ¡Venta guardada con éxito!");
 
-            // Reiniciamos carrito
             carrito = [];
             total = 0;
             actualizarPantalla();
-            
-            // Actualizamos la tabla de historial
             actualizarHistorialPantalla();
         }
 
