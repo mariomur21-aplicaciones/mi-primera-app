@@ -215,15 +215,17 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             let buscador = document.getElementById("buscador-producto");
             let termino = buscador ? buscador.value.toLowerCase().trim() : "";
             let contenedor = document.getElementById("lista-productos-dinamica");
-            contenedor.innerHTML = "";
             
+            if (!contenedor) return;
+            contenedor.innerHTML = "";
+
             if (productosInventario.length === 0) {
-                contenedor.innerHTML = "<p>No se encontraron productos en el archivo.</p>";
+                contenedor.innerHTML = "<p style='padding: 10px;'>Por favor, cargue un archivo CSV o Excel para desplegar la lista de productos comerciales.</p>";
                 return;
             }
             
             if (termino === "") {
-                contenedor.innerHTML = "<p>Inventario listo. Use el buscador superior para encontrar productos.</p>";
+                contenedor.innerHTML = "<p style='padding: 10px;'>Inventario listo. Use el buscador superior para encontrar productos.</p>";
                 return;
             }
             
@@ -231,13 +233,11 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             for (let i = 0; i < productosInventario.length; i++) {
                 let p = productosInventario[i];
                 
-                // Convertimos cada campo a texto seguro para evitar que valores vacíos o indefinidos rompan el buscador
                 let marcaSegura = p.marca ? p.marca.toString().toLowerCase() : "";
                 let detalleSeguro = p.detalle ? p.detalle.toString().toLowerCase() : "";
                 let refSegura = p.codigo ? p.codigo.toString().toLowerCase() : "";
                 let refFormateada = p.codigo ? p.codigo.toString().padStart(5, '0').toLowerCase() : "";
 
-                // El producto se mostrará si el término coincide con la marca, el detalle o la referencia
                 if (marcaSegura.includes(termino) || 
                     detalleSeguro.includes(termino) || 
                     refSegura.includes(termino) ||
@@ -248,7 +248,7 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             }
             
             if (filtrados.length === 0) {
-                contenedor.innerHTML = "<p>No se encontraron coincidencias.</p>";
+                contenedor.innerHTML = "<p style='padding: 10px;'>No se encontraron coincidencias.</p>";
                 return;
             }
             
@@ -256,21 +256,25 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 let producto = item.producto;
                 let indice = item.indiceOriginal;
                 let div = document.createElement("div");
+                
+                // Asignamos la clase nativa y estilizamos en armonía con la nueva columna de desplazamiento vertical
                 div.className = "producto";
-                div.style.display = "block";
-                div.style.padding = "10px";
-                div.style.borderBottom = "1px solid #eee";
+                div.style.padding = "12px";
+                div.style.marginBottom = "10px";
+                div.style.backgroundColor = "#fdfdfd";
+                div.style.border = "1px solid #e2e8f0";
+                div.style.borderRadius = "6px";
                 
                 let refFormateada = producto.codigo.toString().padStart(5, '0');
-                let precioFormateado = producto.precio.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                let precioFormateado = producto.precio.toLocaleString('en-US');
                 
                 div.innerHTML = `
-                    <div><b>MARCA:</b> ${producto.marca}</div>
-                    <div><b>REF:</b> ${refFormateada}</div>
-                    <div><b>Detalle:</b> ${producto.detalle}</div>
-                    <div><b>STOCK:</b> ${producto.stock}</div>
-                    <div><b>PRECIO:</b> ${precioFormateado}</div>
-                    <button class="btn-agregar" style="width: 100%; margin-top: 8px;" onclick="agregarAlCarritoDinamico(${indice})">Agregar al Carrito</button>
+                    <div style="margin-bottom: 3px;"><b>MARCA:</b> ${producto.marca}</div>
+                    <div style="margin-bottom: 3px;"><b>REF:</b> ${refFormateada}</div>
+                    <div style="margin-bottom: 3px;"><b>Detalle:</b> ${producto.detalle}</div>
+                    <div style="margin-bottom: 3px;"><b>STOCK:</b> ${producto.stock}</div>
+                    <div style="margin-bottom: 6px;"><b>PRECIO:</b> $${precioFormateado}</div>
+                    <button class="btn-agregar" style="width: 100%; box-sizing: border-box; padding: 10px;" onclick="agregarAlCarritoDinamico(${indice})">Agregar al Carrito</button>
                 `;
                
                 contenedor.appendChild(div);
