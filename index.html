@@ -78,8 +78,7 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
 
       let productosInventario = [];
 
-        // Tolera selectores de la version 1.1 y 1.2 para evitar fallos de interfaz
-        // Tolera selectores de la version 1.1 y 1.2 para evitar fallos de interfaz
+        // Configuración del botón de carga manual original
         let botonCarga = document.getElementById("archivo-inventario") || document.getElementById("archivo-csv");
         
         if (botonCarga) {
@@ -112,22 +111,74 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             });
         }
 
-        // Conexión automática inmediata: Lee el archivo 'inventario.csv' directamente al cargar el script
-        fetch("inventario.csv")
-            .then(respuesta => {
-                if (!respuesta.ok) {
-                    throw new Error("No se encontró el archivo 'inventario.csv' en esta carpeta para carga automática.");
+        function procesarExcel(filas) {
+            productosInventario = [];
+            for (let i = 1; i < filas.length; i++) {
+                let fila = filas[i];
+                if (!fila || fila.length < 5) continue;
+                
+                let marcaVal = fila[0] ? fila[0].toString().trim() : "Sin Marca";
+                let codigoVal = fila[1] ? fila[1].toString().trim() : "Sin Código";
+                let detalleVal = fila[2] ? fila[2].toString().trim() : "Sin Detalle";
+                let stockVal = fila[3] !== undefined ? parseInt(fila[3]) : 0;
+                let precioRaw = fila[4] !== undefined ? fila[4].toString().trim().replace(/,/g, "") : "0";
+                
+                if (codigoVal !== "" || detalleVal !== "") {
+                    productosInventario.push({
+                        marca: marcaVal,
+                        codigo: codigoVal,
+                        detalle: detalleVal,
+                        stock: isNaN(stockVal) ? 0 : stockVal,
+                        precio: parseFloat(precioRaw) || 0
+                    });
                 }
-                return respuesta.text();
-            })
-            .then(contenido => {
-                // Envía el texto directo al motor adaptativo para activar el buscador
-                procesarCSV(contenido);
-            })
-            .catch(error => {
-                // Si el archivo no existe en la carpeta, el sistema no se rompe y permite la carga manual
-                console.log("Carga automática omitida: " + error.message);
-            });
+            }
+            
+            let buscador = document.getElementById("buscador-producto");
+            if (buscador) {
+                buscador.disabled = false;
+                buscador.value = "";
+            }
+            mostrarProductosDinamicos();
+        }
+
+        function procesarCSV(texto) {
+            let lineas = texto.split(/\r?\n/);
+            productosInventario = [];
+            
+            for (let i = 1; i < lineas.length; i++) {
+                let linea = lineas[i].trim();
+                if (linea === "") continue;
+                
+                let columnas = linea.split(";");
+                if (columnas.length < 5) {
+                    columnas = linea.split(",");
+                }
+                
+                if (columnas.length >= 5) {
+                    let marcaVal = columnas[0] ? columnas[0].trim() : "Sin Marca";
+                    let codigoVal = columnas[1] ? columnas[1].trim() : "Sin Código";
+                    let detalleVal = columnas[2] ? columnas[2].trim() : "Sin Detalle";
+                    let stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
+                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/,/g, "") : "0";
+                    
+                    productosInventario.push({
+                        marca: marcaVal,
+                        codigo: codigoVal,
+                        detalle: detalleVal,
+                        stock: isNaN(stockVal) ? 0 : stockVal,
+                        precio: parseFloat(precioRaw) || 0
+                    });
+                }
+            }
+            
+            let buscador = document.getElementById("buscador-producto");
+            if (buscador) {
+                buscador.disabled = false;
+                buscador.value = "";
+            }
+            mostrarProductosDinamicos();
+        }
 
         
 
