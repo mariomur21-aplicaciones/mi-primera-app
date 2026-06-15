@@ -117,40 +117,48 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             productosInventario = [];
             for (let i = 1; i < filas.length; i++) {
                 let fila = filas[i];
-                if (!fila || fila.length < 3) continue;
+                if (!fila) continue;
                 
+                // Convertimos cada celda a texto limpio removiendo espacios
+                let c = fila.map(cell => cell !== undefined && cell !== null ? cell.toString().trim() : "");
+                if (c.join("") === "") continue;
+
                 let marcaVal = "Sin Marca";
-                let codigoVal = "";
-                let detalleVal = "";
+                let codigoVal = "Sin Código";
+                let detalleVal = "Sin Detalle";
                 let stockVal = 0;
-                let precioRaw = "0";
+                let precioVal = 0;
 
-                // Adaptación automática según el número de columnas del archivo
-                if (fila.length >= 5) {
-                    marcaVal = fila[0] ? fila[0].toString().trim() : "Sin Marca";
-                    codigoVal = fila[1] ? fila[1].toString().trim() : "";
-                    detalleVal = fila[2] ? fila[2].toString().trim() : "";
-                    stockVal = fila[3] !== undefined ? parseInt(fila[3]) : 0;
-                    precioRaw = fila[4] !== undefined ? fila[4].toString().trim() : "0";
-                } else {
-                    // Si viene sin marca, la primera columna se toma como el código/referencia
-                    codigoVal = fila[0] ? fila[0].toString().trim() : "";
-                    detalleVal = fila[1] ? fila[1].toString().trim() : "";
-                    stockVal = fila[2] !== undefined ? parseInt(fila[2]) : 0;
-                    precioRaw = fila[3] !== undefined ? fila[3].toString().trim() : "0";
+                // Mapeo dinámico adaptativo según las columnas provistas en Excel
+                if (c.length === 1) {
+                    detalleVal = c[0];
+                } else if (c.length === 2) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                } else if (c.length === 3) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                    precioVal = parseFloat(c[2].replace(/[^0-9.]/g, "")) || 0;
+                } else if (c.length === 4) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                    stockVal = parseInt(c[2]) || 0;
+                    precioVal = parseFloat(c[3].replace(/[^0-9.]/g, "")) || 0;
+                } else if (c.length >= 5) {
+                    marcaVal = c[0] || "Sin Marca";
+                    codigoVal = c[1] || "Sin Código";
+                    detalleVal = c[2] || "Sin Detalle";
+                    stockVal = parseInt(c[3]) || 0;
+                    precioVal = parseFloat(c[4].replace(/[^0-9.]/g, "")) || 0;
                 }
 
-                let precioLimpio = precioRaw.replace(/[^0-9.]/g, "");
-
-                if (codigoVal !== "" || detalleVal !== "") {
-                    productosInventario.push({
-                        marca: marcaVal,
-                        codigo: codigoVal || "Sin Código",
-                        detalle: detalleVal || "Sin Detalle",
-                        stock: isNaN(stockVal) ? 0 : stockVal,
-                        precio: parseFloat(precioLimpio) || 0
-                    });
-                }
+                productosInventario.push({
+                    marca: marcaVal,
+                    codigo: codigoVal,
+                    detalle: detalleVal,
+                    stock: isNaN(stockVal) ? 0 : stockVal,
+                    precio: isNaN(precioVal) ? 0 : precioVal
+                });
             }
             completarCarga();
         }
@@ -163,44 +171,55 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 let linea = lineas[i].trim();
                 if (linea === "") continue;
                 
-                let columnas = linea.split(";");
-                if (columnas.length < 3) {
-                    columnas = linea.split(",");
-                }
+                // Soporte nativo para delimitadores comunes: punto y coma, coma o tabulaciones
+                let c = linea.split(";");
+                if (c.length < 2) c = linea.split(",");
+                if (c.length < 2) c = linea.split("\t");
                 
-                if (columnas.length >= 3) {
-                    let marcaVal = "Sin Marca";
-                    let codigoVal = "";
-                    let detalleVal = "";
-                    let stockVal = 0;
-                    let precioRaw = "0";
+                // Limpieza absoluta eliminando comillas dobles o simples contenedoras de texto
+                c = c.map(cell => {
+                    let limpio = cell.trim();
+                    return limpio.replace(/^["']|["']$/g, '').trim();
+                });
 
-                    // Adaptación automática para formato CSV
-                    if (columnas.length >= 5) {
-                        marcaVal = columnas[0] ? columnas[0].trim() : "Sin Marca";
-                        codigoVal = columnas[1] ? columnas[1].trim() : "";
-                        detalleVal = columnas[2] ? columnas[2].trim() : "";
-                        stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
-                        precioRaw = columnas[4] ? columnas[4].trim() : "0";
-                    } else {
-                        codigoVal = columnas[0] ? columnas[0].trim() : "";
-                        detalleVal = columnas[1] ? columnas[1].trim() : "";
-                        stockVal = columnas[2] ? parseInt(columnas[2].trim()) : 0;
-                        precioRaw = columnas[3] ? columnas[3].trim() : "0";
-                    }
+                if (c.join("") === "") continue;
+                
+                let marcaVal = "Sin Marca";
+                let codigoVal = "Sin Código";
+                let detalleVal = "Sin Detalle";
+                let stockVal = 0;
+                let precioVal = 0;
 
-                    let precioLimpio = precioRaw.replace(/[^0-9.]/g, "");
-                    
-                    if (codigoVal !== "" || detalleVal !== "") {
-                        productosInventario.push({
-                            marca: marcaVal,
-                            codigo: codigoVal || "Sin Código",
-                            detalle: detalleVal || "Sin Detalle",
-                            stock: isNaN(stockVal) ? 0 : stockVal,
-                            precio: parseFloat(precioLimpio) || 0
-                        });
-                    }
+                // Mapeo dinámico adaptativo según las columnas provistas en CSV
+                if (c.length === 1) {
+                    detalleVal = c[0];
+                } else if (c.length === 2) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                } else if (c.length === 3) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                    precioVal = parseFloat(c[2].replace(/[^0-9.]/g, "")) || 0;
+                } else if (c.length === 4) {
+                    codigoVal = c[0];
+                    detalleVal = c[1];
+                    stockVal = parseInt(c[2]) || 0;
+                    precioVal = parseFloat(c[3].replace(/[^0-9.]/g, "")) || 0;
+                } else if (c.length >= 5) {
+                    marcaVal = c[0] || "Sin Marca";
+                    codigoVal = c[1] || "Sin Código";
+                    detalleVal = c[2] || "Sin Detalle";
+                    stockVal = parseInt(c[3]) || 0;
+                    precioVal = parseFloat(c[4].replace(/[^0-9.]/g, "")) || 0;
                 }
+
+                productosInventario.push({
+                    marca: marcaVal,
+                    codigo: codigoVal,
+                    detalle: detalleVal,
+                    stock: isNaN(stockVal) ? 0 : stockVal,
+                    precio: isNaN(precioVal) ? 0 : precioVal
+                });
             }
             completarCarga();
         }
@@ -211,6 +230,8 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 buscador.disabled = false;
                 buscador.value = "";
             }
+            // Alerta de confirmación inmediata con el conteo real de registros guardados
+            alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
             mostrarProductosDinamicos();
         }
             let termino = buscador ? buscador.value.toLowerCase().trim() : "";
