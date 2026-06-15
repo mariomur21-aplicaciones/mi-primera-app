@@ -7,8 +7,13 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         h1 { text-align: center; color: #1a73e8; }
-        .contenedor-principal { display: flex; gap: 20px; max-width: 1100px; margin: 0 auto; flex-wrap: wrap; }
-        .seccion { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #1a73e8; margin-top: 0; margin-bottom: 15px; }
+        .contenedor-principal { display: flex; gap: 20px; max-width: 1100px; margin: 0 auto; flex: 1; min-height: 0; width: 100%; }
+        .columna-fija { display: flex; flex-direction: column; gap: 20px; flex: 1; min-width: 320px; }
+        .seccion { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .seccion-scroll { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        .contenedor-scroll { flex: 1; overflow-y: auto; padding-right: 5px; }
         .producto { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .btn-agregar { background-color: #1a73e8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
         .btn-agregar:hover { background-color: #1557b0; }
@@ -26,32 +31,36 @@
 
     <div class="contenedor-principal">
         
-     <div class="seccion">
-            <h2>Cargar Inventario</h2>
-            <input type="file" id="archivo-csv" accept=".csv" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
-            <h2>Buscar Producto</h2>
-            <input type="text" id="buscador-producto" placeholder="Escriba la marca, ref o detalle..." oninput="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
-        </div>
+        <div class="columna-fija">
+            <div class="seccion">
+                <h2>Cargar Inventario</h2>
+                <input type="file" id="archivo-csv" accept=".csv, .xlsx, .xls" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
+                <h2>Buscar Producto</h2>
+                <input type="text" id="buscador-producto" placeholder="Escriba la marca, ref o detalle..." oninput="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
+            </div>
 
-        <div class="seccion">
-            <h2>Carrito Actual</h2>
-            <ul id="lista-carrito"></ul>
-            <div class="total">Total Actual: $<span id="monto-total">0</span></div>
-            <button class="btn-pagar" onclick="procesarPago()">Cobrar Venta</button>
-        </div>
-
-        <div class="seccion" style="flex: 100%;">
-            <h2>Productos Disponibles</h2>
-            <div id="lista-productos-dinamica">
-                <p>Por favor, cargue un archivo CSV para desplegar la lista de productos comerciales.</p>
+            <div class="seccion">
+                <h2>Carrito Actual</h2>
+                <ul id="lista-carrito"></ul>
+                <div class="total">Total Actual: $<span id="monto-total">0</span></div>
+                <button class="btn-pagar" onclick="procesarPago()">Cobrar Venta</button>
             </div>
         </div>
 
-        <div class="seccion" style="flex: 100%;">
-            <h2>📊 Historial de Ventas del Día</h2>
-            <div id="lista-historial"></div>
-            <div class="total" style="color: #28a745;">Caja Total Acumulada: $<span id="caja-total">0</span></div>
-            <button class="btn-borrar" onclick="limpiarHistorial()">Cerrar Caja (Borrar Historial)</button>
+        <div class="columna-fija seccion-scroll" style="flex: 1.5;">
+            <div class="seccion seccion-scroll" style="margin-bottom: 20px;">
+                <h2>Productos Disponibles</h2>
+                <div id="lista-productos-dinamica" class="contenedor-scroll">
+                    <p>Por favor, cargue un archivo CSV o Excel para desplegar la lista de productos comerciales.</p>
+                </div>
+            </div>
+
+            <div class="seccion seccion-scroll">
+                <h2>📊 Historial de Ventas del Día</h2>
+                <div id="lista-historial" class="contenedor-scroll"></div>
+                <div class="total" style="color: #28a745; margin-bottom: 10px;">Caja Total Acumulada: $<span id="caja-total">0</span></div>
+                <button class="btn-borrar" onclick="limpiarHistorial()">Cerrar Caja (Borrar Historial)</button>
+            </div>
         </div>
 
     </div>
