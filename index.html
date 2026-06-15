@@ -113,26 +113,35 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
 
         
 
-      function procesarExcel(filas) {
+     function procesarExcel(filas) {
             productosInventario = [];
+            // Empezamos en i = 1 para saltar los encabezados de la primera fila
             for (let i = 1; i < filas.length; i++) {
                 let fila = filas[i];
                 if (!fila || fila.length < 3) continue;
                 
-                // Mapeo corregido para el archivo de 5 columnas (REF, Detalle, STOCK, PRECIO)
-                let codigoVal = fila[1] ? fila[1].toString().trim() : "";
-                let detalleVal = fila[2] ? fila[2].toString().trim() : "";
+                // Mapeo seguro asegurando que existan las 5 propiedades requeridas por la app
+                let marcaVal = fila[0] ? fila[0].toString().trim() : "Sin Marca";
+                let codigoVal = fila[1] ? fila[1].toString().trim() : "Sin Código";
+                let detalleVal = fila[2] ? fila[2].toString().trim() : "Sin Detalle";
                 let stockVal = fila[3] !== undefined ? parseInt(fila[3]) : 0;
-                let precioRaw = fila[4] !== undefined ? fila[4].toString().trim().replace(/,/g, "") : "0";
+                let precioRaw = fila[4] !== undefined ? fila[4].toString().trim().replace(/[^0-9.]/g, "") : "0";
                 
-                if (codigoVal !== "" || detalleVal !== "") {
+                if (codigoVal !== "Sin Código" || detalleVal !== "Sin Detalle") {
                     productosInventario.push({
-                        codigo: codigoVal || "Sin Código",
-                        detalle: detalleVal || "Sin Detalle",
+                        marca: marcaVal,
+                        codigo: codigoVal,
+                        detalle: detalleVal,
                         stock: isNaN(stockVal) ? 0 : stockVal,
                         precio: parseFloat(precioRaw) || 0
                     });
                 }
+            }
+            
+            let buscador = document.getElementById("buscador-producto");
+            if (buscador) {
+                buscador.disabled = false;
+                buscador.value = "";
             }
             mostrarProductosDinamicos();
         }
@@ -168,22 +177,26 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 let linea = lineas[i].trim();
                 if (linea === "") continue;
                 
+                // Detecta automáticamente si el separador es punto y coma o coma
                 let columnas = linea.split(";");
-                if (columnas.length < 5) {
+                if (columnas.length < 3) {
                     columnas = linea.split(",");
                 }
                 
-                if (columnas.length >= 5) {
+                // Mapeo adaptativo robusto
+                if (columnas.length >= 3) {
                     let marcaVal = columnas[0] ? columnas[0].trim() : "Sin Marca";
                     let codigoVal = columnas[1] ? columnas[1].trim() : "Sin Código";
                     let detalleVal = columnas[2] ? columnas[2].trim() : "Sin Detalle";
+                    
+                    // Si el archivo tiene menos de 5 columnas, evita que el programa falle asignando valores por defecto
                     let stockVal = columnas[3] ? parseInt(columnas[3].trim()) : 0;
-                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/,/g, "") : "0";
+                    let precioRaw = columnas[4] ? columnas[4].trim().replace(/[^0-9.]/g, "") : "0";
                     
                     productosInventario.push({
-                        marca: marcaVal,
-                        codigo: codigoVal,
-                        detalle: detalleVal,
+                        marca: marcaVal || "Sin Marca",
+                        codigo: codigoVal || "Sin Código",
+                        detalle: detalleVal || "Sin Detalle",
                         stock: isNaN(stockVal) ? 0 : stockVal,
                         precio: parseFloat(precioRaw) || 0
                     });
