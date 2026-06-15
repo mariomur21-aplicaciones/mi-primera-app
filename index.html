@@ -217,9 +217,17 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             let filtrados = [];
             for (let i = 0; i < productosInventario.length; i++) {
                 let p = productosInventario[i];
-                let refFormateada = p.codigo.toString().padStart(5, '0');
-                if (p.marca.toLowerCase().includes(termino) || 
-                    p.detalle.toLowerCase().includes(termino) || 
+                
+                // Convertimos cada campo a texto seguro para evitar que valores vacíos o indefinidos rompan el buscador
+                let marcaSegura = p.marca ? p.marca.toString().toLowerCase() : "";
+                let detalleSeguro = p.detalle ? p.detalle.toString().toLowerCase() : "";
+                let refSegura = p.codigo ? p.codigo.toString().toLowerCase() : "";
+                let refFormateada = p.codigo ? p.codigo.toString().padStart(5, '0').toLowerCase() : "";
+
+                // El producto se mostrará si el término coincide con la marca, el detalle o la referencia
+                if (marcaSegura.includes(termino) || 
+                    detalleSeguro.includes(termino) || 
+                    refSegura.includes(termino) ||
                     refFormateada.includes(termino)) {
                     filtrados.push({ producto: p, indiceOriginal: i });
                 }
