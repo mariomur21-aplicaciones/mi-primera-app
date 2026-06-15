@@ -112,24 +112,22 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             });
         }
 
-        // Conexión automática: Intenta leer el archivo 'inventario.csv' de la carpeta al abrir la aplicación
-        window.addEventListener("DOMContentLoaded", function() {
-            fetch("inventario.csv")
-                .then(respuesta => {
-                    if (!respuesta.ok) {
-                        throw new Error("No se encontró el archivo 'inventario.csv' en esta carpeta para carga automática.");
-                    }
-                    return respuesta.text();
-                })
-                .then(contenido => {
-                    // Envía el texto directo al motor adaptativo para activar el buscador
-                    procesarCSV(contenido);
-                })
-                .catch(error => {
-                    // Si el archivo no existe en la carpeta, el sistema no se rompe y permite la carga manual
-                    console.log("Carga automática omitida: " + error.message);
-                });
-        });
+        // Conexión automática inmediata: Lee el archivo 'inventario.csv' directamente al cargar el script
+        fetch("inventario.csv")
+            .then(respuesta => {
+                if (!respuesta.ok) {
+                    throw new Error("No se encontró el archivo 'inventario.csv' en esta carpeta para carga automática.");
+                }
+                return respuesta.text();
+            })
+            .then(contenido => {
+                // Envía el texto directo al motor adaptativo para activar el buscador
+                procesarCSV(contenido);
+            })
+            .catch(error => {
+                // Si el archivo no existe en la carpeta, el sistema no se rompe y permite la carga manual
+                console.log("Carga automática omitida: " + error.message);
+            });
 
         
 
