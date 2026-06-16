@@ -245,8 +245,13 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             }
             
             let filtrados = [];
+          let filtrados = [];
             for (let i = 0; i < productosInventario.length; i++) {
                 let p = productosInventario[i];
+                
+                // Excluir inmediatamente del buscador los productos sin existencias en stock
+                if (p.stock <= 0) continue;
+                
                 let marcaSegura = p.marca ? p.marca.toString().toLowerCase() : "";
                 let detalleSeguro = p.detalle ? p.detalle.toString().toLowerCase() : "";
                 let refSegura = p.codigo ? p.codigo.toString().toLowerCase() : "";
