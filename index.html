@@ -285,7 +285,8 @@
                 return;
             }
             
-            // Si no hay texto ingresado Y tampoco se ha seleccionado ninguna marca
+            // CORRECCIÓN: Si no hay texto Y tampoco hay marca seleccionada, se muestra el mensaje de espera.
+            // Si hay una marca seleccionada (aunque el texto esté vacío), saltará esta condición y mostrará los productos.
             if (termino === "" && marcaSeleccionada === "") {
                 contenedor.innerHTML = "<p style='padding: 10px;'>Inventario listo. Seleccione una marca o use el buscador superior para encontrar productos.</p>";
                 return;
@@ -299,12 +300,12 @@
                 let refSegura = p.codigo ? p.codigo.toString().toLowerCase() : "";
                 let refFormateada = p.codigo ? p.codigo.toString().padStart(5, '0').toLowerCase() : "";
                 
-                // Filtro 1: Si hay una marca seleccionada y el producto no coincide, lo salta
+                // Filtro 1: Validación por menú desplegable de marcas
                 if (marcaSeleccionada !== "" && marcaSegura !== marcaSeleccionada) {
                     continue; 
                 }
                 
-                // Filtro 2: Si hay texto en el buscador y no coincide con los campos, lo salta
+                // Filtro 2: Validación por el texto del buscador
                 if (termino !== "") {
                     if (!marcaSegura.includes(termino) && 
                         !detalleSeguro.includes(termino) && 
