@@ -268,7 +268,7 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 return;
             }
             
-            // PRIMER RENGLÓN: Creación de los Encabezados de la Lista
+          // PRIMER RENGLÓN: Creación de los Encabezados de la Lista
             let divEncabezado = document.createElement("div");
             divEncabezado.style.display = "grid";
             divEncabezado.style.gridTemplateColumns = "1.2fr 1fr 3fr 0.8fr 1.2fr 40px";
@@ -277,11 +277,12 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
             divEncabezado.style.backgroundColor = "#e2e8f0";
             divEncabezado.style.fontWeight = "bold";
             divEncabezado.style.fontSize = "12px";
-            divEncabezado.style.borderHeader = "1px solid #cbd5e1";
+            divEncabezado.style.border = "1px solid #cbd5e1";
             divEncabezado.style.borderRadius = "4px";
             divEncabezado.style.marginBottom = "8px";
             divEncabezado.style.position = "sticky";
             divEncabezado.style.top = "0";
+            
             
             divEncabezado.innerHTML = `
                 <div>MARCA</div>
