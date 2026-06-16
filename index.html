@@ -27,45 +27,16 @@
     </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body>
-
-    <div class="contenedor-principal">
+<div class="seccion">
+                <h2>Cargar Inventario</h2>
+                <input type="file" id="archivo-csv" accept=".csv, .xlsx, .xls" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
         
-        <div class="columna-fija">
-       function completarCarga() {
-            let buscador = document.getElementById("buscador-producto");
-            if (buscador) {
-                buscador.disabled = false;
-                buscador.value = "";
-            }
-            
-            // Lógica para extraer marcas del archivo e insertarlas en el filtro
-            let selectMarca = document.getElementById("filtro-marca");
-            if (selectMarca) {
-                // Limpiamos opciones anteriores dejando solo el encabezado por defecto
-                selectMarca.innerHTML = '<option value="">-- Todas las Marcas --</option>';
-                let marcasUnicas = [];
-                
-                // Recorremos los productos cargados para agrupar las marcas sin repetir
-                productosInventario.forEach(function(p) {
-                    let m = p.marca ? p.marca.trim() : "Sin Marca";
-                    if (m && !marcasUnicas.includes(m)) {
-                        marcasUnicas.push(m);
-                    }
-                });
-                
-                // Ordenamos las marcas alfabéticamente y las agregamos al selector HTML
-                marcasUnicas.sort().forEach(function(marca) {
-                    let opt = document.createElement("option");
-                    opt.value = marca.toLowerCase();
-                    opt.textContent = marca;
-                    selectMarca.appendChild(opt);
-                });
-            }
-
-            alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
-            mostrarProductosDinamicos();
-        }
+                <h2>Buscar Producto</h2>
+                <select id="filtro-marca" onchange="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; font-family: inherit;">
+                    <option value="">-- Todas las Marcas --</option>
+                </select>
+                <input type="text" id="buscador-producto" placeholder="Escriba la ref o detalle..." oninput="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;" disabled>
+            </div>
 
             <div class="seccion">
                 <h2>Carrito Actual</h2>
@@ -93,18 +64,43 @@
 
     </div>
 
-    <script>
+  <script>
         let carrito = [];
         let total = 0;
-        
-        // Al cargar la página, recuperamos el historial guardado de la memoria de la computadora
-      
-let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
+        let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
+        let productosInventario = [];
 
         // Dibujamos el historial inmediatamente al abrir la app
         actualizarHistorialPantalla();
 
-      let productosInventario = [];
+        function completarCarga() {
+            let buscador = document.getElementById("buscador-producto");
+            if (buscador) {
+                buscador.disabled = false;
+                buscador.value = "";
+            }
+            
+            let selectMarca = document.getElementById("filtro-marca");
+            if (selectMarca) {
+                selectMarca.innerHTML = '<option value="">-- Todas las Marcas --</option>';
+                let marcasUnicas = [];
+                productosInventario.forEach(function(p) {
+                    let m = p.marca ? p.marca.trim() : "Sin Marca";
+                    if (m && !marcasUnicas.includes(m)) {
+                        marcasUnicas.push(m);
+                    }
+                });
+                marcasUnicas.sort().forEach(function(marca) {
+                    let opt = document.createElement("option");
+                    opt.value = marca.toLowerCase();
+                    opt.textContent = marca;
+                    selectMarca.appendChild(opt);
+                });
+            }
+
+            alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
+            mostrarProductosDinamicos();
+        }
 
         // Configuración del botón de carga manual original
         let botonCarga = document.getElementById("archivo-inventario") || document.getElementById("archivo-csv");
