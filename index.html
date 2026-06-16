@@ -32,12 +32,15 @@
     <div class="contenedor-principal">
         
         <div class="columna-fija">
-            <div class="seccion">
-                <h2>Cargar Inventario</h2>
-                <input type="file" id="archivo-csv" accept=".csv, .xlsx, .xls" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
-                <h2>Buscar Producto</h2>
-                <input type="text" id="buscador-producto" placeholder="Escriba la marca, ref o detalle..." oninput="mostrarProductosDinamicos()" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
-            </div>
+            function completarCarga() {
+            let buscador = document.getElementById("buscador-producto");
+ if (buscador) {
+                buscador.disabled = false;
+ buscador.value = "";
+            }
+            alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
+ mostrarProductosDinamicos();
+        }
 
             <div class="seccion">
                 <h2>Carrito Actual</h2>
@@ -222,13 +225,35 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 buscador.disabled = false;
                 buscador.value = "";
             }
+            
+            let selectMarca = document.getElementById("filtro-marca");
+            if (selectMarca) {
+                selectMarca.innerHTML = '<option value="">-- Todas las Marcas --</option>';
+                let marcasUnicas = [];
+                productosInventario.forEach(function(p) {
+                    let m = p.marca ? p.marca.trim() : "Sin Marca";
+                    if (m && !marcasUnicas.includes(m)) {
+                        marcasUnicas.push(m);
+                    }
+                });
+                marcasUnicas.sort().forEach(function(marca) {
+                    let opt = document.createElement("option");
+                    opt.value = marca.toLowerCase();
+                    opt.textContent = marca;
+                    selectMarca.appendChild(opt);
+                });
+            }
+
             alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
             mostrarProductosDinamicos();
         }
 
         function mostrarProductosDinamicos() {
             let buscador = document.getElementById("buscador-producto");
+            let selectMarca = document.getElementById("filtro-marca");
+            
             let termino = buscador ? buscador.value.toLowerCase().trim() : "";
+            let marcaSeleccionada = selectMarca ? selectMarca.value : "";
             let contenedor = document.getElementById("lista-productos-dinamica");
             
             if (!contenedor) return;
@@ -239,12 +264,12 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 return;
             }
             
-            if (termino === "") {
-                contenedor.innerHTML = "<p style='padding: 10px;'>Inventario listo. Use el buscador superior para encontrar productos.</p>";
+            if (termino === "" && marcaSeleccionada === "") {
+                contenedor.innerHTML = "<p style='padding: 10px;'>Inventario listo. Seleccione una marca o use el buscador superior para encontrar productos.</p>";
                 return;
             }
             
-                   let filtrados = [];
+            let filtrados = [];
             for (let i = 0; i < productosInventario.length; i++) {
                 let p = productosInventario[i];
                 let marcaSegura = p.marca ? p.marca.toString().toLowerCase() : "";
@@ -252,12 +277,20 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 let refSegura = p.codigo ? p.codigo.toString().toLowerCase() : "";
                 let refFormateada = p.codigo ? p.codigo.toString().padStart(5, '0').toLowerCase() : "";
                 
-                if (marcaSegura.includes(termino) || 
-                    detalleSeguro.includes(termino) || 
-                    refSegura.includes(termino) ||
-                    refFormateada.includes(termino)) {
-                    filtrados.push({ producto: p, indiceOriginal: i });
+                if (marcaSeleccionada !== "" && marcaSegura !== marcaSeleccionada) {
+                    continue; 
                 }
+                
+                if (termino !== "") {
+                    if (!marcaSegura.includes(termino) && 
+                        !detalleSeguro.includes(termino) && 
+                        !refSegura.includes(termino) &&
+                        !refFormateada.includes(termino)) {
+                        continue;
+                    }
+                }
+                
+                filtrados.push({ producto: p, indiceOriginal: i });
                 if (filtrados.length >= 20) break;
             }
             
