@@ -266,34 +266,62 @@ let historialVentas = JSON.parse(localStorage.getItem("historial")) || [];
                 return;
             }
             
+            // PRIMER RENGLÓN: Creación de los Encabezados de la Lista
+            let divEncabezado = document.createElement("div");
+            divEncabezado.style.display = "grid";
+            divEncabezado.style.gridTemplateColumns = "1.2fr 1fr 3fr 0.8fr 1.2fr 40px";
+            divEncabezado.style.gap = "8px";
+            divEncabezado.style.padding = "8px 12px";
+            divEncabezado.style.backgroundColor = "#e2e8f0";
+            divEncabezado.style.fontWeight = "bold";
+            divEncabezado.style.fontSize = "12px";
+            divEncabezado.style.borderHeader = "1px solid #cbd5e1";
+            divEncabezado.style.borderRadius = "4px";
+            divEncabezado.style.marginBottom = "8px";
+            divEncabezado.style.position = "sticky";
+            divEncabezado.style.top = "0";
+            
+            divEncabezado.innerHTML = `
+                <div>MARCA</div>
+                <div>REF</div>
+                <div>DETALLE</div>
+                <div style="text-align: center;">STK</div>
+                <div style="text-align: right;">PRECIO</div>
+                <div></div>
+            `;
+            contenedor.appendChild(divEncabezado);
+            
+            // RENGLONES INFERIORES: Renderizado de los productos correspondientes
             filtrados.forEach(function(item) {
                 let producto = item.producto;
                 let indice = item.indiceOriginal;
                 let div = document.createElement("div");
                 
-                div.className = "producto";
-                div.style.padding = "12px";
-                div.style.marginBottom = "10px";
+                // Formato de fila horizontal alineada con los encabezados superiores
+                div.style.display = "grid";
+                div.style.gridTemplateColumns = "1.2fr 1fr 3fr 0.8fr 1.2fr 40px";
+                div.style.gap = "8px";
+                div.style.alignItems = "center";
+                div.style.padding = "8px 12px";
+                div.style.marginBottom = "4px";
                 div.style.backgroundColor = "#fdfdfd";
                 div.style.border = "1px solid #e2e8f0";
-                div.style.borderRadius = "6px";
+                div.style.borderRadius = "4px";
+                div.style.fontSize = "13px";
                 
                 let refFormateada = producto.codigo.toString().padStart(5, '0');
                 let precioFormateado = producto.precio.toLocaleString('en-US');
                 
-              div.innerHTML = `
-                    <div style="margin-bottom: 3px;"><b>MARCA:</b> ${producto.marca}</div>
-                    <div style="margin-bottom: 3px;"><b>REF:</b> ${refFormateada}</div>
-                    <div style="margin-bottom: 3px;"><b>Detalle:</b> ${producto.detalle}</div>
-                    <div style="margin-bottom: 3px;"><b>STOCK:</b> ${producto.stock}</div>
-                    <div style="margin-bottom: 6px;"><b>PRECIO:</b> $${precioFormateado}</div>
-                    <div style="text-align: right; margin-top: 5px;">
+                div.innerHTML = `
+                    <div style="word-break: break-word;">${producto.marca}</div>
+                    <div style="color: #64748b;">${refFormateada}</div>
+                    <div style="font-weight: 500; word-break: break-word;">${producto.detalle}</div>
+                    <div style="text-align: center; color: #475569;">${producto.stock}</div>
+                    <div style="text-align: right; font-weight: bold; color: #1a73e8;">$${precioFormateado}</div>
+                    <div style="text-align: right;">
                         <button class="btn-agregar" style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;" onclick="agregarAlCarritoDinamico(${indice})">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-                            </svg>
-                        </button>
-                    </div>
                             </svg>
                         </button>
                     </div>
