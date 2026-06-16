@@ -32,14 +32,39 @@
     <div class="contenedor-principal">
         
         <div class="columna-fija">
-            function completarCarga() {
+       function completarCarga() {
             let buscador = document.getElementById("buscador-producto");
- if (buscador) {
+            if (buscador) {
                 buscador.disabled = false;
- buscador.value = "";
+                buscador.value = "";
             }
+            
+            // Lógica para extraer marcas del archivo e insertarlas en el filtro
+            let selectMarca = document.getElementById("filtro-marca");
+            if (selectMarca) {
+                // Limpiamos opciones anteriores dejando solo el encabezado por defecto
+                selectMarca.innerHTML = '<option value="">-- Todas las Marcas --</option>';
+                let marcasUnicas = [];
+                
+                // Recorremos los productos cargados para agrupar las marcas sin repetir
+                productosInventario.forEach(function(p) {
+                    let m = p.marca ? p.marca.trim() : "Sin Marca";
+                    if (m && !marcasUnicas.includes(m)) {
+                        marcasUnicas.push(m);
+                    }
+                });
+                
+                // Ordenamos las marcas alfabéticamente y las agregamos al selector HTML
+                marcasUnicas.sort().forEach(function(marca) {
+                    let opt = document.createElement("option");
+                    opt.value = marca.toLowerCase();
+                    opt.textContent = marca;
+                    selectMarca.appendChild(opt);
+                });
+            }
+
             alert("Inventario cargado exitosamente. Se encontraron " + productosInventario.length + " productos.");
- mostrarProductosDinamicos();
+            mostrarProductosDinamicos();
         }
 
             <div class="seccion">
